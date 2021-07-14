@@ -1,0 +1,508 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" href="/img/self/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="moodyliu">
+  <meta name="keywords" content="">
+  
+  <title>Animation Insight部分原理 - 匆匆</title>
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@10.6.0/styles/github-gist.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css" />
+  
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.8.10","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"copy_btn":true,"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null}}};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>匆匆</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('/img/bg/main.jpg') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="Animation Insight部分原理">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2021-07-14 21:37" pubdate>
+        2021年7月14日 晚上
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      1.4k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      18
+       分钟
+    </span>
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">Animation Insight部分原理</h1>
+            
+            <div class="markdown-body">
+              <h1 id="Animation-Insight-部分原理简介"><a href="#Animation-Insight-部分原理简介" class="headerlink" title="Animation Insight 部分原理简介"></a>Animation Insight 部分原理简介</h1><h2 id="Animation-Insight-是什么"><a href="#Animation-Insight-是什么" class="headerlink" title="Animation Insight 是什么"></a>Animation Insight 是什么</h2><p>Animation Insight是Unreal提供的一款分析动画行为、记录追踪动画信息的插件，事实上Unreal还提供了分析其他系统的其他的Insight工具，此处暂不赘述。</p>
+<p> 若对使用感兴趣，可以参见以下文档或博客：</p>
+<p> <a target="_blank" rel="noopener" href="https://docs.unrealengine.com/zh-CN/TestingAndOptimization/PerformanceAndProfiling/UnrealInsights/AnimationInsights/index.html">Animation Insights 概述</a></p>
+<p> <a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/147648443">简述 UnrealInsights</a> <a target="_blank" rel="noopener" href="https://docs.unrealengine.com/zh-CN/TestingAndOptimization/PerformanceAndProfiling/UnrealInsights/Overview/index.html">Unreal Insight 概述</a></p>
+<h2 id="Animation-Insight-通信原理"><a href="#Animation-Insight-通信原理" class="headerlink" title="Animation Insight 通信原理"></a>Animation Insight 通信原理</h2><p>笔者比较关心的事情是，因为这套Insight工具是一套插件或者独立程序（目前Animation Insight是一套插件而其余Insight工具作为独立程序），这些动画信息和行为是从引擎那边收集起来并且通知到插件的呢？ </p>
+<p>概括的说，这套系统是一个比较典型的观察者模式，动画信息的收集方是被观察者，而Insight方则为观察者，两者间通过Socket进行解耦、通信。 </p>
+<h3 id="信息处理"><a href="#信息处理" class="headerlink" title="信息处理"></a>信息处理</h3><p> 首先从观察者方来进行研究，来看我们需要的是什么数据，这些数据是怎么来的，以下以AnimMontage为例。</p>
+<p> 观察者的基类是 <code>IAnalyzer</code>， 其有两个关键方法；用于订阅事件的 <code>OnAnalysisBegin()</code> ，以及用于接收这些订阅的 <code>OnEvent()</code> 。 </p>
+<p>下面是 <code>FAnimationAnalyzer</code> 关于Montage的部分源码：</p>
+ <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">FAnimationAnalyzer::OnAnalysisBegin</span><span class="hljs-params">(<span class="hljs-keyword">const</span> FOnAnalysisContext&amp; Context)</span></span><br><span class="hljs-function"></span>&#123;<br>	<span class="hljs-keyword">auto</span>&amp; Builder = Context.InterfaceBuilder;<br>	<span class="hljs-comment">// ...</span><br>	Builder.<span class="hljs-built_in">RouteEvent</span>(RouteId_Montage, <span class="hljs-string">&quot;Animation&quot;</span>, <span class="hljs-string">&quot;Montage&quot;</span>); <br>&#125;<br><span class="hljs-function"><span class="hljs-keyword">bool</span> <span class="hljs-title">FAnimationAnalyzer::OnEvent</span><span class="hljs-params">(uint16 RouteId, <span class="hljs-keyword">const</span> FOnEventContext&amp; Context)</span></span><br><span class="hljs-function"></span>&#123;<br>	Trace::FAnalysisSessionEditScope _(Session);<br>	<span class="hljs-keyword">const</span> <span class="hljs-keyword">auto</span>&amp; EventData = Context.EventData;<br>	<span class="hljs-built_in"><span class="hljs-keyword">switch</span></span> (RouteId)<br>	&#123;<br>    <span class="hljs-keyword">case</span> RouteId_Montage:<br>	&#123;<br>		uint64 Cycle = EventData.GetValue&lt;uint64&gt;(<span class="hljs-string">&quot;Cycle&quot;</span>);<br>		uint64 AnimInstanceId = EventData.GetValue&lt;uint64&gt;(<span class="hljs-string">&quot;AnimInstanceId&quot;</span>);<br>		uint64 MontageId = EventData.GetValue&lt;uint64&gt;(<span class="hljs-string">&quot;MontageId&quot;</span>);<br>		uint32 CurrentSectionNameId = EventData.GetValue&lt;uint32&gt;(<span class="hljs-string">&quot;CurrentSectionNameId&quot;</span>);<br>		uint32 NextSectionNameId = EventData.GetValue&lt;uint32&gt;(<span class="hljs-string">&quot;NextSectionNameId&quot;</span>);<br>		<span class="hljs-keyword">float</span> Weight = EventData.GetValue&lt;<span class="hljs-keyword">float</span>&gt;(<span class="hljs-string">&quot;Weight&quot;</span>);<br>		<span class="hljs-keyword">float</span> DesiredWeight = EventData.GetValue&lt;<span class="hljs-keyword">float</span>&gt;(<span class="hljs-string">&quot;DesiredWeight&quot;</span>);<br>		uint16 FrameCounter = EventData.GetValue&lt;uint16&gt;(<span class="hljs-string">&quot;FrameCounter&quot;</span>);<br>		AnimationProvider.<span class="hljs-built_in">AppendMontage</span>(AnimInstanceId, Context.SessionContext.<span class="hljs-built_in">TimestampFromCycle</span>(Cycle), MontageId, CurrentSectionNameId, NextSectionNameId, Weight, DesiredWeight, FrameCounter);  <span class="hljs-comment">// 将收集到的Montage信息记录下来</span><br>		<span class="hljs-keyword">break</span>;<br>	&#125;<br>	&#125;<br>	<span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>在上面的代码中，我们注意到有一个叫 AnimationProvider 的变量，其是 FAnimationProvider 类的一个实例对象，其作用是用来保存收集到的关于Animation的信息，以用作记录、分析动画信息，关于这个的信息分析本文不作讨论。</p>
+<p>这个类的关键在于，由于每个动画信息的时间、先后都是非常重要的，因此它使用了一个 TimeLine 的设计，Montage采用的是 TPointTimeline 类来记录，这个类会记录每一次Montage播放时的 BeginTime 和 EndTime 等信息。</p>
+<p>从 IAnalyzer 往上查找引用你能找到例如 FAnalysisEngine 类，其用于注册所有Analysis，监听与分发 OnEvent 等作用，再往上追查可以找到关于Socket建立与读取的一些信息，具体的实现细节本文不作讨论。</p>
+<h3 id="信息收集"><a href="#信息收集" class="headerlink" title="信息收集"></a>信息收集</h3><p>Insight 系统的信息收集使用了 <code>Trace</code> 框架，其是一种结构化的日志记录框架，用于跟踪正在运行的流程中的仪表测量事件。此框架旨在生成高频跟踪事件的流，此类事件自我描述，可以轻松使用和共享。</p>
+<p>其文档描述如下：<a target="_blank" rel="noopener" href="https://docs.unrealengine.com/zh-CN/TestingAndOptimization/PerformanceAndProfiling/UnrealInsights/Reference/Trace/index.html">Trace</a> </p>
+<p>以下继续以Montage的信息收集为例。 首先是Montage的信息定义：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-built_in">UE_TRACE_EVENT_BEGIN</span>(Animation, Montage)	<span class="hljs-comment">// Animation 是这个这个事件的LoggerName， Montage是这个事件的EventName 使用这两个Name来进行后续的消息派发的路由</span><br>	<span class="hljs-built_in">UE_TRACE_EVENT_FIELD</span>(uint64, Cycle)<br>	<span class="hljs-built_in">UE_TRACE_EVENT_FIELD</span>(uint64, AnimInstanceId)<br>	<span class="hljs-built_in">UE_TRACE_EVENT_FIELD</span>(uint64, MontageId)<br>	<span class="hljs-built_in">UE_TRACE_EVENT_FIELD</span>(uint32, CurrentSectionNameId)<br>	<span class="hljs-built_in">UE_TRACE_EVENT_FIELD</span>(uint32, NextSectionNameId)<br>	<span class="hljs-built_in">UE_TRACE_EVENT_FIELD</span>(<span class="hljs-keyword">float</span>, Weight)<br>	<span class="hljs-built_in">UE_TRACE_EVENT_FIELD</span>(<span class="hljs-keyword">float</span>, DesiredWeight)<br>	<span class="hljs-built_in">UE_TRACE_EVENT_FIELD</span>(uint16, FrameCounter)<br><span class="hljs-built_in">UE_TRACE_EVENT_END</span>()<br></code></pre></td></tr></table></figure>
+
+<p>这里其实是用宏创建了一个类型，然后其每一个字段用一个 <code>TField</code> 类的实例来表示，这里的宏展开后有一个比较有趣的事情，就是使用 <code>decltype</code> 来计算了字段的序号和偏移值，以方便后续的写入缓存：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> TRACE_PRIVATE_EVENT_BEGIN_IMPL(LinkageType, LoggerName, EventName, ...) \</span><br><span class="hljs-meta">	<span class="hljs-comment">// ...</span></span><br>	Trace::TField&lt;<span class="hljs-number">0</span> <span class="hljs-comment">/*Index*/</span>, <span class="hljs-number">0</span> <span class="hljs-comment">/*Offset*/</span>,<br><span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> TRACE_PRIVATE_EVENT_FIELD(FieldType, FieldName) \</span><br><span class="hljs-meta">	FieldType&gt; const FieldName = Trace::FLiteralName(#FieldName); \</span><br><span class="hljs-meta">	Trace::TField&lt; \</span><br><span class="hljs-meta">		decltype(FieldName)::Index + 1, \</span><br><span class="hljs-meta">		decltype(FieldName)::Offset + decltype(FieldName)::Size,</span><br>  <br><span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">int</span> InIndex, <span class="hljs-keyword">int</span> InOffset, <span class="hljs-keyword">typename</span> Type&gt; <br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">TField</span></span><br><span class="hljs-class">&#123;</span><br>	<span class="hljs-built_in">TRACE_PRIVATE_FIELD</span>(InIndex, InOffset, Type);	<span class="hljs-comment">// 这里声明关于Index、Offset的一些常量</span><br>	<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">FActionable</span></span><br><span class="hljs-class">	&#123;</span><br>		<span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">Write</span><span class="hljs-params">(uint8* __restrict Ptr)</span> <span class="hljs-keyword">const</span>	<span class="hljs-comment">// 这里用于后面的数据写入，利用到了字段的Index和Offset</span></span><br><span class="hljs-function">		</span>&#123;<br>			::<span class="hljs-built_in">memcpy</span>(Ptr + Offset, &amp;Value, Size);<br>		&#125;<br>	&#125;;<br>&#125;;<br></code></pre></td></tr></table></figure>
+
+<p>Montage的相关信息在 <code>UAnimInstance::UpdateMontage</code> 方法中进行收集如下：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> TRACE_ANIM_MONTAGE(AnimInstance, MontageInstance) \</span><br><span class="hljs-meta">	FAnimTrace::OutputMontage(AnimInstance, MontageInstance);</span><br>   <br><span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">UAnimInstance::UpdateMontage</span><span class="hljs-params">(<span class="hljs-keyword">float</span> DeltaSeconds)</span></span><br><span class="hljs-function"></span>&#123;<br>	<span class="hljs-comment">//...</span><br><span class="hljs-meta">#<span class="hljs-meta-keyword">if</span> ANIM_TRACE_ENABLED</span><br>	<span class="hljs-keyword">for</span> (FAnimMontageInstance* MontageInstance : MontageInstances)<br>	&#123;<br>		<span class="hljs-built_in">TRACE_ANIM_MONTAGE</span>(<span class="hljs-keyword">this</span>, *MontageInstance);	<span class="hljs-comment">// 对蒙太奇信息进行收集发送</span><br>	&#125;<br><span class="hljs-meta">#<span class="hljs-meta-keyword">endif</span></span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>比较有趣的地方是 <code>OutputMontage</code> 方法中发送信息时的技巧，使用对象的生命周期来控制发送信息，如同智能指针的实现一样。 </p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-built_in">UE_TRACE_LOG</span>(Animation, Montage, AnimationChannel)<br>	&lt;&lt; Montage.<span class="hljs-built_in">Cycle</span>(FPlatformTime::<span class="hljs-built_in">Cycles64</span>())<br>	&lt;&lt; Montage.<span class="hljs-built_in">AnimInstanceId</span>(FObjectTrace::<span class="hljs-built_in">GetObjectId</span>(InAnimInstance))<br>	&lt;&lt; Montage.<span class="hljs-built_in">MontageId</span>(FObjectTrace::<span class="hljs-built_in">GetObjectId</span>(InMontageInstance.Montage))<br>	&lt;&lt; Montage.<span class="hljs-built_in">CurrentSectionNameId</span>(CurrentSectionNameId)<br>	&lt;&lt; Montage.<span class="hljs-built_in">NextSectionNameId</span>(NextSectionNameId)<br>	&lt;&lt; Montage.<span class="hljs-built_in">Weight</span>(InMontageInstance.<span class="hljs-built_in">GetWeight</span>())<br>	&lt;&lt; Montage.<span class="hljs-built_in">DesiredWeight</span>(InMontageInstance.<span class="hljs-built_in">GetDesiredWeight</span>())<br>	&lt;&lt; Montage.<span class="hljs-built_in">FrameCounter</span>(FObjectTrace::<span class="hljs-built_in">GetObjectWorldTickCounter</span>(InAnimInstance));<br></code></pre></td></tr></table></figure>
+
+<p>展开宏以后，会发现其实在宏中创建了一个 <code>FLogScope</code> 类型的实例对象，利用它的构造函数来构建数据包的包头，而利用其 &lt;&lt; 操作符以将蒙太奇的一些数据并写入缓存，再利用其析构函数将这些数据进行提交。 其重点代码如下： </p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">inline</span> FEventDef::FLogScope::<span class="hljs-built_in">FLogScope</span>(uint16 EventUid, uint16 Size, uint32 EventFlags)<br>&#123;<br>	<span class="hljs-keyword">const</span> <span class="hljs-keyword">bool</span> bMaybeHasAux = EventFlags &amp; FEventDef::Flag_MaybeHasAux;<br>	Instance = (EventFlags &amp; FEventDef::Flag_NoSync)<br>		? <span class="hljs-built_in">Writer_BeginLogNoSync</span>(EventUid, Size, bMaybeHasAux)<br>		: <span class="hljs-built_in">Writer_BeginLog</span>(EventUid, Size, bMaybeHasAux);<br>&#125;<br><span class="hljs-keyword">inline</span> FEventDef::FLogScope::~<span class="hljs-built_in">FLogScope</span>()<br>&#123;<br>	<span class="hljs-built_in">Writer_EndLog</span>(Instance);<br>&#125;<br><span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> ActionType&gt;<br><span class="hljs-keyword">inline</span> <span class="hljs-keyword">const</span> FEventDef::FLogScope&amp; <span class="hljs-keyword">operator</span> &lt;&lt; (<span class="hljs-keyword">const</span> FEventDef::FLogScope&amp; Lhs, <span class="hljs-keyword">const</span> ActionType&amp; Rhs)<br>&#123;<br>	Rhs.<span class="hljs-built_in">Write</span>(Lhs.Instance.Ptr);<br>	<span class="hljs-keyword">return</span> Lhs;<br>&#125;<br></code></pre></td></tr></table></figure>
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/UE4/">UE4</a>
+                    
+                      <a class="hover-with-bg" href="/categories/UE4/Insight/">Insight</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Note/">Note</a>
+                    
+                      <a class="hover-with-bg" href="/tags/UE4/">UE4</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Unreal-Insight/">Unreal Insight</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">
+                  
+                    本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！
+                  
+                </p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2021/05/11/%E5%B8%B8%E7%94%A8%E5%B7%A5%E5%85%B7%E4%B8%8E%E6%8F%92%E4%BB%B6%E6%8E%A8%E8%8D%90/">
+                        <span class="hidden-mobile">常用工具与插件推荐</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+              <!-- Comments -->
+              <article class="comments" id="comments" lazyload>
+                
+                  
+                
+                
+  <div class="disqus" style="width:100%">
+    <div id="disqus_thread"></div>
+    
+      <script type="text/javascript">
+        var disqus_config = function() {
+          this.page.url = 'http://example.com/2021/07/14/Animation-Insight%E9%83%A8%E5%88%86%E5%8E%9F%E7%90%86/';
+          this.page.identifier = '/2021/07/14/Animation-Insight%E9%83%A8%E5%88%86%E5%8E%9F%E7%90%86/';
+        };
+        Fluid.utils.loadComments('#disqus_thread', function() {
+          var d = document, s = d.createElement('script');
+          s.src = '//' + 'moodyliu' + '.disqus.com/embed.js';
+          s.setAttribute('data-timestamp', new Date());
+          (d.head || d.body).appendChild(s);
+        });
+      </script>
+    
+    <noscript>Please enable JavaScript to view the comments</noscript>
+  </div>
+
+
+              </article>
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+
+    
+      <a id="scroll-top-button" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+     <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+  </div>
+  
+
+  
+
+  
+</footer>
+
+
+  <!-- SCRIPTS -->
+  
+  <script  src="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js" ></script>
+<script  src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/tocbot@4.12.2/dist/tocbot.min.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/anchor-js@4.3.0/anchor.min.js" ></script>
+
+
+
+  <script defer src="https://cdn.jsdelivr.net/npm/clipboard@2.0.8/dist/clipboard.min.js" ></script>
+
+
+
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/typed.js@2.0.11/lib/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+      typing(title)
+      
+    })(window, document);
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    (function () {
+      var path = "/local-search.xml";
+      $('#local-search-input').on('click', function() {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      });
+      $('#modalSearch').on('shown.bs.modal', function() {
+        $('#local-search-input').focus();
+      });
+    })()
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+</body>
+</html>
