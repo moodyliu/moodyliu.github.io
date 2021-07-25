@@ -1,0 +1,522 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" href="/img/self/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="moodyliu">
+  <meta name="keywords" content="">
+  
+  <title>AnimSequence压缩与解压 - 匆匆</title>
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@10.6.0/styles/github-gist.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css" />
+  
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.8.10","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"copy_btn":true,"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null}}};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>匆匆</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('/img/bg/main.jpg') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="AnimSequence压缩与解压">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2021-07-25 22:53" pubdate>
+        2021年7月25日 晚上
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      1.1k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      12
+       分钟
+    </span>
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">AnimSequence压缩与解压</h1>
+            
+            <div class="markdown-body">
+              <h1 id="AnimSequence-压缩"><a href="#AnimSequence-压缩" class="headerlink" title="AnimSequence 压缩"></a>AnimSequence 压缩</h1><h2 id="动画序列压缩"><a href="#动画序列压缩" class="headerlink" title="动画序列压缩"></a>动画序列压缩</h2><p>在UE4中，动画序列在不进行压缩时会记录各骨骼逐帧的变换数据以及曲线数据，</p>
+<p>可以通过一些配置以对动画序列的帧信息以进行压缩以优化其所占用的内存。</p>
+<p>总的来说，方法主要有以下两种：</p>
+<ol>
+<li>压缩关键帧的数量。</li>
+<li>压缩各关键帧的数据占用量。</li>
+</ol>
+<h3 id="压缩关键帧数量"><a href="#压缩关键帧数量" class="headerlink" title="压缩关键帧数量"></a>压缩关键帧数量</h3><h4 id="压缩格式"><a href="#压缩格式" class="headerlink" title="压缩格式"></a>压缩格式</h4><p>压缩关键帧的格式主要有 <code>VariableKey</code> 和 <code>ConstantKey</code> 两种：</p>
+<ul>
+<li>Variable Key：除了记录下每个关键帧以外，还会使用一个table来记录每一个关键帧在未经压缩的序列帧中的序号。</li>
+<li>Constant Key：只记录关键帧的数据，关键帧与关键帧间时间间隔应该相同。</li>
+</ul>
+<p>UE中使用 <code>AnimEncoding</code> 类来进行压缩与解压，后文会称此类的及其子类为Codec，下面是其重点函数：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">AnimEncoding</span></span><br><span class="hljs-class">&#123;</span><br><span class="hljs-keyword">public</span>:<br>    <span class="hljs-comment">// 从FMemoryReader中读取动画数据</span><br>	<span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">ByteSwapIn</span><span class="hljs-params">(</span></span><br><span class="hljs-params"><span class="hljs-function">		FUECompressedAnimData&amp; CompressedData,</span></span><br><span class="hljs-params"><span class="hljs-function">		FMemoryReader&amp; MemoryReader)</span> <span class="hljs-title">PURE_VIRTUAL</span><span class="hljs-params">(AnimEncoding::ByteSwapIn,)</span></span>;<br><br>    <span class="hljs-comment">// 从MemoryWriter中写入动画数据</span><br>	<span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">ByteSwapOut</span><span class="hljs-params">( </span></span><br><span class="hljs-params"><span class="hljs-function">        FUECompressedAnimData&amp; CompressedData,</span></span><br><span class="hljs-params"><span class="hljs-function">		FMemoryWriter&amp; MemoryWriter)</span> <span class="hljs-title">PURE_VIRTUAL</span><span class="hljs-params">(AnimEncoding::ByteSwapOut, )</span></span>;<br>    <br>	<span class="hljs-comment">// 得到解压后指定骨骼们的旋转数据</span><br>	<span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">GetPoseRotations</span><span class="hljs-params">(</span></span><br><span class="hljs-params"><span class="hljs-function">		TArrayView&lt;FTransform&gt;&amp; Atoms,</span></span><br><span class="hljs-params"><span class="hljs-function">		<span class="hljs-keyword">const</span> BoneTrackArray&amp; DesiredPairs,</span></span><br><span class="hljs-params"><span class="hljs-function">		FAnimSequenceDecompressionContext&amp; DecompContext)</span> <span class="hljs-title">PURE_VIRTUAL</span><span class="hljs-params">(AnimEncoding::GetPoseRotations,)</span></span>;<br><br>	<span class="hljs-comment">// 得到解压后指定骨骼们的位移数据</span><br>	<span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">GetPoseTranslations</span><span class="hljs-params">(</span></span><br><span class="hljs-params"><span class="hljs-function">		TArrayView&lt;FTransform&gt;&amp; Atoms,</span></span><br><span class="hljs-params"><span class="hljs-function">		<span class="hljs-keyword">const</span> BoneTrackArray&amp; DesiredPairs,</span></span><br><span class="hljs-params"><span class="hljs-function">		FAnimSequenceDecompressionContext&amp; DecompContext)</span> <span class="hljs-title">PURE_VIRTUAL</span><span class="hljs-params">(AnimEncoding::GetPoseTranslations,)</span></span>;<br><br>  	<span class="hljs-comment">// 得到解压后指定骨骼们的缩放数据</span><br>	<span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">GetPoseScales</span><span class="hljs-params">(</span></span><br><span class="hljs-params"><span class="hljs-function">		TArrayView&lt;FTransform&gt;&amp; Atoms,</span></span><br><span class="hljs-params"><span class="hljs-function">		<span class="hljs-keyword">const</span> BoneTrackArray&amp; DesiredPairs,</span></span><br><span class="hljs-params"><span class="hljs-function">		FAnimSequenceDecompressionContext&amp; DecompContext)</span> <span class="hljs-title">PURE_VIRTUAL</span><span class="hljs-params">(AnimEncoding::GetPoseScales,)</span></span>;<br></code></pre></td></tr></table></figure>
+
+<p>其类图如下：</p>
+<p><img src="/img/content/2021/7/AnimEncoding.png" srcset="/img/loading.gif" lazyload alt="AnimEncoding"></p>
+<p>其中，AEFVariableKeyLerp类对应了VariableKey压缩格式、AEFConstantKeyLerp类对应了ConstantKey的压缩格式。</p>
+<p>另外，我们可以看到这两个类是泛型类，这与其帧内数据的格式相关，后文会介绍到。</p>
+<p><code>AEFPerTrackCompressionCodec</code> 则是对每一个Track选取不同的压缩格式。</p>
+<h4 id="压缩策略"><a href="#压缩策略" class="headerlink" title="压缩策略"></a>压缩策略</h4><p>在对动画序列进行压缩时，可以选择多种压缩策略，不同的压缩策略会根据自己策略的不同，选取不同的压缩格式以对数据进行压缩。</p>
+<p>例如，RemoveEverySecondKey(隔帧移除)则是每两帧只记录一帧，这样数据量就会减半，这种压缩方式由于帧与帧间的间隔固定，因此很适合使用ConstantKey的压缩格式，这样可以避免关键帧table的开销。</p>
+<p>关于各压缩策略的具体细节，请参考<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/133253086">UE4 Animation Sequence 的压缩算法</a>，其类图如下：</p>
+<p><img src="/img/content/2021/7/AnimCompress.png" srcset="/img/loading.gif" lazyload alt="AnimCompress"></p>
+<p>这些压缩策略都继承自 <code>UAnimCompress</code>，其有一个关键函数为 <code>DoReduction</code> ，该函数用于对动画数据进行 <code>剔除</code> 、设置对应的压缩格式、数据格式，并调用 <code>AnimationFormat_SetInterfaceLinks</code> 函数根据之前的设置选取对应的Codec。</p>
+<p>以ConstantKeyLerp为数据格式的位移数据为例，设置其Codec的示例代码如下：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">AnimationFormat_SetInterfaceLinks</span><span class="hljs-params">(CompressedDataType&amp; CompressedData)</span></span><br><span class="hljs-function"></span>&#123;<br>	CompressedData.TranslationCodec = <span class="hljs-literal">NULL</span>;<br><br>	<span class="hljs-keyword">if</span> (CompressedData.KeyEncodingFormat == AKF_ConstantKeyLerp)<br>	&#123;<br>        <span class="hljs-comment">// 实例化各种帧内数据压缩格式的Codec</span><br>		<span class="hljs-keyword">static</span> AEFConstantKeyLerp&lt;ACF_None&gt;					AEFConstantKeyLerp_None;<br>		<span class="hljs-keyword">static</span> AEFConstantKeyLerp&lt;ACF_Float96NoW&gt;			AEFConstantKeyLerp_Float96NoW;<br>		<span class="hljs-keyword">static</span> AEFConstantKeyLerp&lt;ACF_Fixed48NoW&gt;			AEFConstantKeyLerp_Fixed48NoW;<br>		<span class="hljs-keyword">static</span> AEFConstantKeyLerp&lt;ACF_IntervalFixed32NoW&gt;	AEFConstantKeyLerp_IntervalFixed32NoW;<br>		<span class="hljs-keyword">static</span> AEFConstantKeyLerp&lt;ACF_Fixed32NoW&gt;			AEFConstantKeyLerp_Fixed32NoW;<br>		<span class="hljs-keyword">static</span> AEFConstantKeyLerp&lt;ACF_Float32NoW&gt;			AEFConstantKeyLerp_Float32NoW;<br>		<span class="hljs-keyword">static</span> AEFConstantKeyLerp&lt;ACF_Identity&gt;				AEFConstantKeyLerp_Identity;<br><br>		<span class="hljs-comment">// 根据设置的Format采取实际的Codec</span><br>		<span class="hljs-built_in"><span class="hljs-keyword">switch</span></span>(CompressedData.TranslationCompressionFormat)<br>		&#123;<br>			<span class="hljs-keyword">case</span> ACF_None:<br>				CompressedData.TranslationCodec = &amp;AEFConstantKeyLerp_None;<br>				<span class="hljs-keyword">break</span>;<br>			<span class="hljs-keyword">case</span> ACF_Float96NoW:<br>				CompressedData.TranslationCodec = &amp;AEFConstantKeyLerp_Float96NoW;<br>				<span class="hljs-keyword">break</span>;<br>			<span class="hljs-keyword">case</span> ACF_IntervalFixed32NoW:<br>				CompressedData.TranslationCodec = &amp;AEFConstantKeyLerp_IntervalFixed32NoW;<br>				<span class="hljs-keyword">break</span>;<br>			<span class="hljs-keyword">case</span> ACF_Identity:<br>				CompressedData.TranslationCodec = &amp;AEFConstantKeyLerp_Identity;<br>				<span class="hljs-keyword">break</span>;<br>		&#125;;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h3 id="压缩帧内数据"><a href="#压缩帧内数据" class="headerlink" title="压缩帧内数据"></a>压缩帧内数据</h3><p>帧内数据有位移、旋转、缩放、曲线数据，根据数据的特性会有不同的压缩方式可以选择。</p>
+<p>概括的说，有以下两种压缩方式：</p>
+<ol>
+<li>不记录可以根据其他数据计算出来的数据。</li>
+<li>降低数据的精度。</li>
+</ol>
+<p>例如，对于旋转而言，由于使用四元数来进行存储，归一化后可以通过XYZ来计算出W，因此使用第一种压缩方式即可省下一个数据，剩下的三个数据可以继续通过第二种方式继续压缩。</p>
+<p>在UE中，有这些数据压缩格式可以选择：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-class"><span class="hljs-keyword">enum</span> <span class="hljs-title">AnimationCompressionFormat</span></span><br><span class="hljs-class">&#123;</span><br>	ACF_None,<br>	ACF_Float96NoW,<br>	ACF_Fixed48NoW,<br>	ACF_IntervalFixed32NoW,<br>	ACF_Fixed32NoW,<br>	ACF_Float32NoW,<br>	ACF_Identity,<br>	<span class="hljs-function">ACF_MAX <span class="hljs-title">UMETA</span><span class="hljs-params">(Hidden)</span>,</span><br><span class="hljs-function">&#125;</span>;<br></code></pre></td></tr></table></figure>
+
+<h2 id="说明"><a href="#说明" class="headerlink" title="说明"></a>说明</h2><p>关于本文内容尚有许多不足之处，有两篇博客建议阅读：</p>
+<ul>
+<li>压缩算法：<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/133253086">UE4 Animation Sequence 的压缩算法</a></li>
+<li>压缩流程：<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/328712220">详解 UE 动画压缩</a></li>
+</ul>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/UE4/">UE4</a>
+                    
+                      <a class="hover-with-bg" href="/categories/UE4/Animation/">Animation</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/UE4/">UE4</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Animtion/">Animtion</a>
+                    
+                      <a class="hover-with-bg" href="/tags/Compress/">Compress</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">
+                  
+                    本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！
+                  
+                </p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2021/07/14/Animation-Insight%E9%83%A8%E5%88%86%E5%8E%9F%E7%90%86/">
+                        <span class="hidden-mobile">Animation Insight部分原理</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+              <!-- Comments -->
+              <article class="comments" id="comments" lazyload>
+                
+                  
+                
+                
+  <div class="disqus" style="width:100%">
+    <div id="disqus_thread"></div>
+    
+      <script type="text/javascript">
+        var disqus_config = function() {
+          this.page.url = 'http://example.com/2021/07/25/AnimSequence%E5%8E%8B%E7%BC%A9/';
+          this.page.identifier = '/2021/07/25/AnimSequence%E5%8E%8B%E7%BC%A9/';
+        };
+        Fluid.utils.loadComments('#disqus_thread', function() {
+          var d = document, s = d.createElement('script');
+          s.src = '//' + 'moodyliu' + '.disqus.com/embed.js';
+          s.setAttribute('data-timestamp', new Date());
+          (d.head || d.body).appendChild(s);
+        });
+      </script>
+    
+    <noscript>Please enable JavaScript to view the comments</noscript>
+  </div>
+
+
+              </article>
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+
+    
+      <a id="scroll-top-button" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+     <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+  </div>
+  
+
+  
+
+  
+</footer>
+
+
+  <!-- SCRIPTS -->
+  
+  <script  src="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js" ></script>
+<script  src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/tocbot@4.12.2/dist/tocbot.min.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/anchor-js@4.3.0/anchor.min.js" ></script>
+
+
+
+  <script defer src="https://cdn.jsdelivr.net/npm/clipboard@2.0.8/dist/clipboard.min.js" ></script>
+
+
+
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/typed.js@2.0.11/lib/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+      typing(title)
+      
+    })(window, document);
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    (function () {
+      var path = "/local-search.xml";
+      $('#local-search-input').on('click', function() {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      });
+      $('#modalSearch').on('shown.bs.modal', function() {
+        $('#local-search-input').focus();
+      });
+    })()
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+</body>
+</html>
